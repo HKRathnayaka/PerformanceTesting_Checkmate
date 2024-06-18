@@ -1,30 +1,43 @@
-import { sleep, group } from 'k6'
+import { sleep, group, check } from 'k6'
 import http from 'k6/http'
+import { Rate } from 'k6/metrics';
 
-export const options = {
-  ext: {
-    loadimpact: {
-      distribution: { 'amazon:us:ashburn': { loadZone: 'amazon:us:ashburn', percent: 100 } },
-      apm: [],
-    },
-  },
-  thresholds: {},
-  scenarios: {
-    Scenario_1: {
-      executor: 'ramping-vus',
-      gracefulStop: '30s',
-      stages: [
-        { target: 20, duration: '1m' },
-        { target: 20, duration: '3m30s' },
-        { target: 0, duration: '1m' },
-      ],
-      gracefulRampDown: '30s',
-      exec: 'scenario_1',
-    },
-  },
+const errorRate = new Rate('errorRate');
+
+export let options = {
+
+    //============Smoke testing=====================
+    vus: 1,
+    duration: '3m',
+    iterations: 1,
+    
+    //============Load testing=====================
+   /*stages: [
+    { duration: '10m', target: 10 },
+    { duration: '45m', target: 10 },
+    { duration: '5m', target: 0 },
+  ],*/
+
+  thresholds :{
+    errorRate: ['rate < 0.1'] //10% errors allowed
+  }
+
+//===========Stress testing====================
+/*  stages: [
+    { duration: '2m', target: 100 }, // below normal load
+    { duration: '5m', target: 100 },
+    { duration: '2m', target: 200 }, // normal load
+    { duration: '5m', target: 200 },
+    { duration: '2m', target: 300 }, // around the breaking point
+    { duration: '5m', target: 300 },
+    { duration: '2m', target: 400 }, // beyond the breaking point
+    { duration: '5m', target: 400 },
+    { duration: '10m', target: 0 }, // scale down. Recovery stage.
+  ],
+*/
 }
 
-export function scenario_1() {
+export default function main() {
   let response
 
   group('page_1 - https://m1.boris-software.com/Login.aspx?ReturnUrl=Auth/App.aspx', function () {
@@ -44,7 +57,7 @@ export function scenario_1() {
         'accept-language': 'en-US,en;q=0.9',
       },
     })
-    sleep(24.5)
+    sleep(19.3)
   })
 
   group('page_2 - https://m1.boris-software.com/Login.aspx?ReturnUrl=Auth%2fApp.aspx', function () {
@@ -86,7 +99,7 @@ export function scenario_1() {
         },
       }
     )
-    sleep(40.4)
+    sleep(66.4)
   })
 
   group(
