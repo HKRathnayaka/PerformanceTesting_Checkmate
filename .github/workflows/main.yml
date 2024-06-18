@@ -1,20 +1,12 @@
 name: Performance Test
-
-on:
-  push:
-    branches:
-      - main
-
+on: [push]
 jobs:
-  k6-test:
+  k6:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up K6
-        uses: grafana/k6-action@HEAD
-
-      - name: Run Performance Test
-        run: k6 run .\TestENV\openAllReportsPage.js
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Run k6 test
+      uses: k6io/action@v0.1
+      with:
+        filename: TestENV\openAllReportsPage.js
